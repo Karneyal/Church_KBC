@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KBC Style Quiz</title>
+  <style>
+      body {
+        background: linear-gradient(135deg, #0a0a3d, #1a1a5e, #000);
+        font-family: Arial, sans-serif;
+        color: white;
+        text-align: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+      .logo {
+  width: 300px;
+  height: 300px;
+  margin: 20px auto;
+  background: url('./image/logo1.png') center/cover no-repeat;
+  border: 3px solid rgb(0, 0, 0);
+  border-radius: 50%;
+}
+
+      .background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: url('./image/logo1.png') repeat;
+  opacity: 0.5;
+}
+
+
+      .quiz-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        min-height: calc(100vh - 300px);
+        padding: 20px;
+      }
+    .question-box {
+      margin: 20px auto;
+      padding: 30px;
+      width: 90%;
+      max-width: 800px;
+      font-size: 28px;
+      font-weight: bold;
+      border: 3px solid gold;
+      border-radius: 50px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      margin-top: 40px;
+      justify-items: center;
+      width: 90%;
+      max-width: 800px;
+      row-gap: 30px;
+    }
+    .option {
+      border: 3px solid #00bfff;
+      border-radius: 40px;
+      padding: 20px;
+      width: 100%;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(0, 191, 255, 0.1);
+      backdrop-filter: blur(5px);
+    }
+    .option:hover {
+      background: #00bfff;
+    }
+    .light-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: lightFlash 2s ease-in-out;
+    }
+    .light-screen h2 {
+      color: #ff0000;
+      font-size: 48px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .light-screen p {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+    .continue-btn {
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .continue-btn:hover {
+      background: #ff6666;
+      transform: scale(1.05);
+    }
+    @keyframes lightFlash {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0.9; }
+    }
+    .timer {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ff4444;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 100;
+    }
+    .timer.paused {
+      background: #666666;
+    }
+    .level-display {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #00bfff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 20px;
+      font-weight: bold;
+      z-index: 100;
+    }
+    .option.selected {
+      background: #ffaa00;
+      border-color: #ff8800;
+      transform: scale(1.05);
+    }
+    .option.confirmed {
+      background: #ff4444;
+      border-color: #ff0000;
+    }
+    .green-light {
+      background: radial-gradient(circle at center, rgba(0, 255, 0, 0.9), rgba(0, 255, 0, 0.7));
+    }
+    .red-light {
+      background: radial-gradient(circle at center, rgba(255, 0, 0, 0.9), rgba(255, 0, 0, 0.7));
+    }
+    .light-screen h2.green {
+      color: #00ff00;
+    }
+    .light-screen h2.red {
+      color: #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <div class="level-display" id="levelDisplay">Level 1</div>
+  <div class="timer" id="timer">30</div>
+  
+  <div class="logo"></div>
+  
+  <div class="quiz-container">
+    <div class="question-box" id="question">Question will appear here</div>
+    <div class="options">
+      <div class="option" onclick="checkAnswer(0)" id="opt0">A:</div>
+      <div class="option" onclick="checkAnswer(1)" id="opt1">B:</div>
+      <div class="option" onclick="checkAnswer(2)" id="opt2">C:</div>
+      <div class="option" onclick="checkAnswer(3)" id="opt3">D:</div>
+    </div>
+  </div>
+
+  <!-- Light Screen for Answer Result -->
+  <div class="light-screen" id="lightScreen">
+    <h2 id="resultText">Result will be shown here</h2>
+    <p id="correctAnswerText">Correct answer will be shown here</p>
+    <button class="continue-btn" onclick="hideLightScreen()">Continue</button>
+  </div>
+
+  <script>
+    const questions = [
+    // Level 1
+    {
+      q: "దావీదు తండ్రి ఎవరు?",
+      options: ["యెహోషువ", "ఎలిశా", "యెషయా","యెష్షయి"],
+      answer: 3
+    },
+    {
+      q: "అపోస్తుల కార్యములు ఎవరు వ్రాశారు?",
+      options: ["పౌలు", "తిమోతి", "యోహాను","లూకా"],
+      answer: 3
+    },
+    {
+      q: "ఎన్ని బంగారు నాణెములకు యూదా యేసుని అప్పగించుటకు అమ్ముడుపోయెను?",
+      options: ["50", "20", "40", "30"],
+      answer: 3
+    },
+    {
+      q: "బైబిల్‌లో తోరా / పెంటటుక్ ఎవరు వ్రాశారు?",
+      options: ["యెహోషువ", "దావీదు", "యెషయా", "మోషే"],
+      answer: 3
+    },
+    {
+      q: "క్రీస్తునీ సిలువ వేసి వేరే ఒక దొంగ నీ విడుదల చేయమని కోరిరి,ఆ  దొంగ ఎవరు?",
+      options: ["బర్నబా", "బెయేర్షెబ", "బరబ్బా", "బత్షెబా"],
+      answer: 2
+    },
+     //Level 2
+    {
+      q: "యేసు రూపాంతరం పొందిన పర్వతముపై ఎవరు ప్రత్యక్షమయ్యారు?",
+      options: ["అబ్రాహాము & ఇస్సాకు", "మోషే & ఎలిశా", "మోషే & ఏలీయా", "ఆదాము & నోహు"],
+      answer: 2
+    },
+    {
+      q: "దావీదు గోల్యాతును చంపిన తరువాత ఎన్ని స్తోత్రాలు పొందాడు?",
+      options: ["వేలలు", "వందలు", "పది వేలలు", "లక్షలు"],
+      answer: 2
+    },
+    {
+      q: "సొలొమోను రాజుకి మరో పేరు ఏమిటి?",
+      options: ["నాతాను", "యెదిద్యా", "బోయజు", "ఏతాను"],
+      answer: 1
+    },
+    {
+      q: "కుష్టు వ్యాధి పడ్డ సైన్యాధికారి ఎవరు?",
+      options: ["గోల్యాతు", "అబ్నేరు", "నయమాను", "సీసెరా"],
+      answer: 2
+    },
+    {
+      q: "\"పునరుత్థానమును జీవమును నేనే \" అని యేసు ఎవరితో అన్నారు?",
+      options: ["మరియ", "మార్థాకు", "మగ్ధలేనే", "మత్తయి"],
+      answer: 1
+    },
+    // Level 3
+    {
+      q: "గడ్డి తిన్న రాజు ఎవరు?",
+      options: ["కైరోసు", "నెబుకద్నెజరు", "హేరోదు", "బెల్షస్సరు"],
+      answer: 1
+    },
+    {
+      q: "మంచి సమరేయుడు కథలో కొట్టబడిన మనిషి ఎక్కడినుండి ఎక్కడికి వెళ్లుచుండెను?",
+      options: ["సమార్య నుండి గలిలయకు", "యెరూషలేము నుండి యెరికోకు", "బేత్లెహేము నుండి నజరేతు", "యెరికో నుండి బేత్లెహేము"],
+      answer: 1
+    },
+    {
+      q: "నా పేరు గ్రీకు భాషలో 'ప్రోత్సాహపుత్రుడు' అని అర్థం. నేనెవరు?",
+      options: ["పౌలు", "తిమోతే", "శీలా", "బర్నబా"],
+      answer: 3
+    },
+    {
+      q: "యేసు క్రీస్తు బేత్లెహేములో జన్మించునని ఎవరు ప్రవచించారు?",
+      options: ["యెషయా", "మీకా", "యిర్మియా", "దానియేలు"],
+      answer: 1
+    },
+    {
+      q: "అసలు హీబ్రూ బైబిల్‌ను ఆంగ్లంలోకి అనువదించినది ఎవరు?",
+      options: ["విలియమ్ క్యారీ", "జాన్ వైక్లిఫ్", "జార్జి ముల్లర్", "సెయింట్ పాల్"],
+      answer: 1
+    },
+    // Level 4
+    // {
+    //   q: "సొదొము & గొమొరా – ఉప్పుగడ్డగా మారినవారు ఎవరు?",
+    //   options: ["యాకోబు", "లోటు భార్య", "ఇస్సాకు", "అబ్రాహాము"],
+    //   answer: 1
+    // }, // IMAGE
+    // {
+    //   q: "యోహాను 4:24 బైబిల్ వచనం చెప్పండి.",
+    //   options: ["ఏదేను", "పరమదేవుని తోట", "స్వర్గం", "సీయోను"],
+    //   answer: 0
+    // },
+   
+    // {
+    //   q: "1 కొరింథీయులకు 15:57: "ఆయన మన ప్రభువైన యేసుక్రీస్తు ద్వారా మనకు విజయము నొసగుచున్నాడు".
+    //   sing a song on the given verse.
+    // ",
+    //   options: ["షద్రక్", "దానియేలు", "మేషక్", "అబెద్నెగో"],
+    //   answer: 1
+    // },
+    // {
+    //   q: "Job 42:2 theme song"
+    //   options: ["ఎర్ర సముద్రం", "మృత సముద్రం", "మధ్యధరా సముద్రం", "నల్ల సముద్రం"],
+    //   answer: 0
+    // }
+    //  q: "image question"
+
+    // Level 5
+    {
+      q: "12 గోత్రాలు గ ఉండి, 12 కుమారులు కలిగిన సారా మనమడు ఎవరు?",
+      options: ["ఇశ్రాయేలు", "ఇష్మాయేలు", "ఇస్సాకు", "నిమ్రోధు"],
+      answer: 0
+    },
+    {
+      q: "1నిబంధన మందసము ఏ లోహము తో చేయబడినది?",
+      options: ["కంచు", "బంగారము", "దేవదారు వృక్షపు కలప", "వెండి"],
+      answer: 2
+    },
+    {
+      q: "బైబిలు గ్రంథము లో ఎన్ని సువార్తలు ఉన్నవి?",
+      options: ["66", "4", "5", "65"],
+      answer: 1
+    },
+    {
+      q: "అహరోను సోదరి ఎవరు?",
+      options: ["యొకెబేదు", "మిర్యాము", "ఎలిషెబ", "సిప్పోరా"],
+      answer: 1
+    },
+    {
+      q: "మత్తయి ప్రధాన వృత్తి ఏంటి?",
+      options: ["జాలరి", "సుంకరి", "ప్రవక్త", "వడ్రంగీ"],
+      answer: 1
+    },
+    //level 6
+    {
+      q: "యేసు తన సందేశం లో బోధించడానికి తరచుగా ఉపయోగించిన ప్రత్యేక రూపం ఏమిటి?",
+      options: ["పత్రికలు", "ప్రవచనములు", "ఉపమానములు", "కీర్తనలు"],
+      answer: 2
+    },
+    {
+      q: "దావీదు కుమారులలో ఎవరు అతనికి వ్యతిరేకం కుట్ర చేసిన సొంత కుమారుడు ఎవరు?",
+      options: ["సొలొమోను", "అభ్షలోము", "అదోనీయా", "అమ్నోన్"],
+      answer: 2
+    }
+    
+    
+    ];
+
+    let current = 0; 
+    let currentLevel = 1;
+    let selectedOption = -1;
+    let timerInterval;
+    let timeLeft = 30;
+    let isFrozen = false;
+    let isPaused = false;
+
+    loadQuestion();
+
+    function loadQuestion() {
+      // Reset state
+      selectedOption = -1;
+      isFrozen = false;
+      timeLeft = 30;
+      
+      // Clear all option selections
+      for (let i = 0; i < 4; i++) {
+        const option = document.getElementById("opt" + i);
+        option.classList.remove("selected", "confirmed");
+      }
+      
+      // Update level display
+      currentLevel = Math.floor(current / 5) + 1;
+      document.getElementById("levelDisplay").innerText = `Level ${currentLevel}`;
+      
+      // Load question
+      document.getElementById("question").innerText = questions[current].q;
+      questions[current].options.forEach((opt, i) => {
+        document.getElementById("opt" + i).innerText = String.fromCharCode(65 + i) + ": " + opt;
+      });
+      
+      // Start timer
+      startTimer();
+    }
+
+    function startTimer() {
+      document.getElementById("timer").innerText = timeLeft;
+      timerInterval = setInterval(() => {
+        if (isPaused) return;
+        timeLeft--;
+        document.getElementById("timer").innerText = timeLeft;
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          // Time's up - treat as wrong answer
+          showLightScreen(false);
+        }
+      }, 1000);
+    }
+
+    function selectOption(i) {
+      if (isFrozen) return;
+      
+      // Stop timer when option is pressed
+      clearInterval(timerInterval);
+      
+      // Clear previous selection
+      for (let j = 0; j < 4; j++) {
+        document.getElementById("opt" + j).classList.remove("selected");
+      }
+      
+      // Select new option
+      selectedOption = i;
+      document.getElementById("opt" + i).classList.add("selected");
+    }
+
+    function confirmAnswer() {
+      if (selectedOption === -1 || isFrozen) return;
+      
+      isFrozen = true;
+      // Timer is already stopped when option was selected
+      
+      // Mark option as confirmed
+      document.getElementById("opt" + selectedOption).classList.add("confirmed");
+      
+      // Check if correct
+      const isCorrect = selectedOption === questions[current].answer;
+      showLightScreen(isCorrect);
+    }
+
+    function showLightScreen(isCorrect) {
+      const lightScreen = document.getElementById("lightScreen");
+      const resultText = document.getElementById("resultText");
+      const correctAnswerText = document.getElementById("correctAnswerText");
+      
+      if (isCorrect) {
+        lightScreen.className = "light-screen green-light";
+        resultText.className = "green";
+        resultText.innerText = "✅ CORRECT ANSWER! ✅";
+        correctAnswerText.innerText = "Congratulations! You got it right!";
+      } else {
+        lightScreen.className = "light-screen red-light";
+        resultText.className = "red";
+        resultText.innerText = "❌ WRONG ANSWER! ❌";
+        const correctAnswer = questions[current].options[questions[current].answer];
+        const correctAnswerLetter = String.fromCharCode(65 + questions[current].answer);
+        correctAnswerText.innerText = `Correct answer: ${correctAnswerLetter}: ${correctAnswer}`;
+      }
+      
+      lightScreen.style.display = "flex";
+    }
+
+    function hideLightScreen() {
+      document.getElementById("lightScreen").style.display = "none";
+      current++;
+      
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        // Quiz completed
+        document.getElementById("question").innerText = "🎉 Quiz Completed! 🎉";
+        document.querySelector(".options").style.display = "none";
+        document.getElementById("timer").style.display = "none";
+        document.getElementById("levelDisplay").innerText = "Quiz Complete!";
+      }
+    }
+
+    // Update option click handlers
+    document.getElementById("opt0").onclick = () => selectOption(0);
+    document.getElementById("opt1").onclick = () => selectOption(1);
+    document.getElementById("opt2").onclick = () => selectOption(2);
+    document.getElementById("opt3").onclick = () => selectOption(3);
+
+    // Add double-click to confirm
+    document.getElementById("opt0").ondblclick = () => confirmAnswer();
+    document.getElementById("opt1").ondblclick = () => confirmAnswer();
+    document.getElementById("opt2").ondblclick = () => confirmAnswer();
+    document.getElementById("opt3").ondblclick = () => confirmAnswer();
+
+    // Pause/Resume timer on click
+    const timerEl = document.getElementById("timer");
+    timerEl.onclick = () => {
+      // toggle pause
+      isPaused = !isPaused;
+      timerEl.classList.toggle("paused", isPaused);
+    };
+  </script>
+</body>
+</html>
